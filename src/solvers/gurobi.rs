@@ -9,6 +9,8 @@ use crate::lp_format::*;
 use crate::solvers::{Solution, SolverProgram, SolverWithSolutionParsing, Status, WithMipGap};
 use crate::util::buf_contains;
 
+use super::WithNbThreads;
+
 /// The proprietary gurobi solver
 #[derive(Debug, Clone)]
 pub struct GurobiSolver {
@@ -16,6 +18,9 @@ pub struct GurobiSolver {
     command_name: String,
     temp_solution_file: Option<PathBuf>,
     mipgap: Option<f32>,
+    threads: Option<u32>,
+    algorithm: Option<u32>,
+    crossover: Option<u32>
 }
 
 impl Default for GurobiSolver {
@@ -32,6 +37,9 @@ impl GurobiSolver {
             command_name: "gurobi_cl".to_string(),
             temp_solution_file: None,
             mipgap: None,
+            threads: None,
+            algorithm: None,
+            crossover: None
         }
     }
     /// set the name of the commandline gurobi executable to use
@@ -41,8 +49,34 @@ impl GurobiSolver {
             command_name,
             temp_solution_file: self.temp_solution_file.clone(),
             mipgap: self.mipgap,
+            threads: self.threads,
+            algorithm: self.algorithm.clone(),
+            crossover: self.crossover
         }
     }
+
+    fn algorithm(&self) -> Option<u32> {
+        self.algorithm
+    }
+
+    fn with_algorithm(&self, algorithm: u32) -> GurobiSolver {
+        GurobiSolver {
+            algorithm: Some(algorithm),
+            ..(*self).clone()
+        }
+    }
+
+    fn crossover(&self) -> Option<u32> {
+        self.crossover
+    }
+
+    fn with_crossover(&self, crossover: u32) -> GurobiSolver {
+        GurobiSolver {
+            crossover: Some(crossover),
+            ..(*self).clone()
+        }
+    }
+
 }
 
 impl SolverWithSolutionParsing for GurobiSolver {
@@ -101,6 +135,19 @@ impl WithMipGap<GurobiSolver> for GurobiSolver {
     }
 }
 
+
+impl WithNbThreads<GurobiSolver> for GurobiSolver {
+    fn nb_threads(&self) -> Option<u32> {
+        self.threads
+    }
+    fn with_nb_threads(&self, threads: u32) -> GurobiSolver {
+        GurobiSolver {
+            threads: Some(threads),
+            ..(*self).clone()
+        }
+    }
+}
+
 impl SolverProgram for GurobiSolver {
     fn command_name(&self) -> &str {
         &self.command_name
@@ -116,6 +163,24 @@ impl SolverProgram for GurobiSolver {
             let mut arg_mipgap: OsString = "MIPGap=".into();
             arg_mipgap.push::<OsString>(mipgap.to_string().into());
             args.push(arg_mipgap);
+        }
+
+        if let Some(threads) = self.nb_threads() {
+            let mut arg_threads: OsString = "Threads=".into();
+            arg_threads.push::<OsString>(threads.to_string().into());
+            args.push(arg_threads);
+        }
+
+        if let Some(algo) = self.algorithm() {
+            let mut arg_algo: OsString = "Method=".into();
+            arg_algo.push::<OsString>(algo.to_string().into());
+            args.push(arg_algo);
+        }
+
+        if let Some(crossover) = self.crossover() {
+            let mut arg_crossover: OsString = "Crossover=".into();
+            arg_crossover.push::<OsString>(crossover.to_string().into());
+            args.push(arg_crossover);
         }
 
         args.push(lp_file.into());
