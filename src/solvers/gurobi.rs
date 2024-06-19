@@ -98,7 +98,7 @@ impl GurobiSolver {
     }
 
     fn predual(&self) -> Option<u32> {
-        self.verbose
+        self.predual
     }
 
     /// Toggle predual
