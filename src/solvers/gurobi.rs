@@ -22,7 +22,8 @@ pub struct GurobiSolver {
     algorithm: Option<u32>,
     crossover: Option<u32>,
     verbose: Option<u32>,
-    predual: Option<u32>
+    predual: Option<u32>,
+    barconvtol: Option<f32>
 }
 
 impl Default for GurobiSolver {
@@ -43,7 +44,8 @@ impl GurobiSolver {
             algorithm: None,
             crossover: None,
             verbose: None,
-            predual: None
+            predual: None,
+            barconvtol: None
         }
     }
     /// set the name of the commandline gurobi executable to use
@@ -57,7 +59,8 @@ impl GurobiSolver {
             algorithm: self.algorithm.clone(),
             crossover: self.crossover,
             verbose: self.verbose,
-            predual: self.predual
+            predual: self.predual,
+            barconvtol: self.barconvtol
         }
     }
 
@@ -109,6 +112,17 @@ impl GurobiSolver {
         }
     }
 
+    fn barconvtol(&self) -> Option<f32> {
+        self.barconvtol
+    }
+
+    /// Toggle predual
+    pub fn with_barconvtol(&self, barconvtol: f32) -> GurobiSolver {
+        GurobiSolver {
+            barconvtol: Some(barconvtol),
+            ..(*self).clone()
+        }
+    }
 }
 
 impl SolverWithSolutionParsing for GurobiSolver {
@@ -225,6 +239,12 @@ impl SolverProgram for GurobiSolver {
             let mut arg_predual: OsString = "PreDual=".into();
             arg_predual.push::<OsString>(predual.to_string().into());
             args.push(arg_predual);
+        }
+
+        if let Some(barconvtol) = self.barconvtol() {
+            let mut arg_barconvtol: OsString = "BarConvTol=".into();
+            arg_barconvtol.push::<OsString>(barconvtol.to_string().into());
+            args.push(arg_barconvtol);
         }
 
         args.push(lp_file.into());
