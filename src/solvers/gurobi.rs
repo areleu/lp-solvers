@@ -20,7 +20,8 @@ pub struct GurobiSolver {
     mipgap: Option<f32>,
     threads: Option<u32>,
     algorithm: Option<u32>,
-    crossover: Option<u32>
+    crossover: Option<u32>,
+    verbose: Option<u32>
 }
 
 impl Default for GurobiSolver {
@@ -39,7 +40,8 @@ impl GurobiSolver {
             mipgap: None,
             threads: None,
             algorithm: None,
-            crossover: None
+            crossover: None,
+            verbose: None
         }
     }
     /// set the name of the commandline gurobi executable to use
@@ -51,7 +53,8 @@ impl GurobiSolver {
             mipgap: self.mipgap,
             threads: self.threads,
             algorithm: self.algorithm.clone(),
-            crossover: self.crossover
+            crossover: self.crossover,
+            verbose: self.verbose
         }
     }
 
@@ -75,6 +78,18 @@ impl GurobiSolver {
     pub fn with_crossover(&self, crossover: u32) -> GurobiSolver {
         GurobiSolver {
             crossover: Some(crossover),
+            ..(*self).clone()
+        }
+    }
+
+    fn verbose(&self) -> Option<u32> {
+        self.verbose
+    }
+
+    /// Tell gurobi to use crossover
+    pub fn set_verbose(&self, verbose: u32) -> GurobiSolver {
+        GurobiSolver {
+            verbose: Some(verbose),
             ..(*self).clone()
         }
     }
@@ -183,6 +198,12 @@ impl SolverProgram for GurobiSolver {
             let mut arg_crossover: OsString = "Crossover=".into();
             arg_crossover.push::<OsString>(crossover.to_string().into());
             args.push(arg_crossover);
+        }
+
+        if let Some(verbose) = self.verbose() {
+            let mut arg_verbose: OsString = "LogToConsole=".into();
+            arg_verbose.push::<OsString>(verbose.to_string().into());
+            args.push(arg_verbose);
         }
 
         args.push(lp_file.into());
