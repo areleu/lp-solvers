@@ -59,7 +59,8 @@ impl GurobiSolver {
         self.algorithm
     }
 
-    fn with_algorithm(&self, algorithm: u32) -> GurobiSolver {
+    /// Add solving method using gurobi syntax
+    pub fn with_algorithm(&self, algorithm: u32) -> GurobiSolver {
         GurobiSolver {
             algorithm: Some(algorithm),
             ..(*self).clone()
@@ -70,7 +71,8 @@ impl GurobiSolver {
         self.crossover
     }
 
-    fn with_crossover(&self, crossover: u32) -> GurobiSolver {
+    /// Tell gurobi to use crossover
+    pub fn with_crossover(&self, crossover: u32) -> GurobiSolver {
         GurobiSolver {
             crossover: Some(crossover),
             ..(*self).clone()
