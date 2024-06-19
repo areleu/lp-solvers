@@ -21,7 +21,8 @@ pub struct GurobiSolver {
     threads: Option<u32>,
     algorithm: Option<u32>,
     crossover: Option<u32>,
-    verbose: Option<u32>
+    verbose: Option<u32>,
+    predual: Option<u32>
 }
 
 impl Default for GurobiSolver {
@@ -41,7 +42,8 @@ impl GurobiSolver {
             threads: None,
             algorithm: None,
             crossover: None,
-            verbose: None
+            verbose: None,
+            predual: None
         }
     }
     /// set the name of the commandline gurobi executable to use
@@ -54,7 +56,8 @@ impl GurobiSolver {
             threads: self.threads,
             algorithm: self.algorithm.clone(),
             crossover: self.crossover,
-            verbose: self.verbose
+            verbose: self.verbose,
+            predual: self.predual
         }
     }
 
@@ -86,10 +89,22 @@ impl GurobiSolver {
         self.verbose
     }
 
-    /// Tell gurobi to use crossover
+    /// Toggle verbose
     pub fn set_verbose(&self, verbose: u32) -> GurobiSolver {
         GurobiSolver {
             verbose: Some(verbose),
+            ..(*self).clone()
+        }
+    }
+
+    fn predual(&self) -> Option<u32> {
+        self.verbose
+    }
+
+    /// Toggle predual
+    pub fn set_predual(&self, predual: u32) -> GurobiSolver {
+        GurobiSolver {
+            predual: Some(predual),
             ..(*self).clone()
         }
     }
@@ -204,6 +219,12 @@ impl SolverProgram for GurobiSolver {
             let mut arg_verbose: OsString = "LogToConsole=".into();
             arg_verbose.push::<OsString>(verbose.to_string().into());
             args.push(arg_verbose);
+        }
+
+        if let Some(predual) = self.predual() {
+            let mut arg_predual: OsString = "PreDual=".into();
+            arg_predual.push::<OsString>(predual.to_string().into());
+            args.push(arg_predual);
         }
 
         args.push(lp_file.into());
